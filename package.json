@@ -4,19 +4,22 @@
   "description": "Slack on electron for Linux arm64",
   "main": "src/main.js",
   "scripts": {
-    "start": "electron ."
+    "start": "electron .",
+    "pack": "electron-builder"
   },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/andirsun/slack-arm64.git"
   },
-  "author": "Anderson Laverde",
+  "author": "Anderson Laverde <hola@andersonlaverde.com>",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/andirsun/slack-arm64/issues"
+    "url": "https://github.com/andirsun/slack-arm64/issues",
+    "email": "hola@andersonlaverde.com"
   },
   "homepage": "https://github.com/andirsun/slack-arm64#readme",
   "devDependencies": {
-    "electron": "^27.1.3"
+    "electron": "^27.1.3",
+    "electron-builder": "^24.9.1"
   }
 }
