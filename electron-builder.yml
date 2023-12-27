@@ -11,8 +11,6 @@ files:
   - package.json
   - src/**/*
   - node_modules
-extraResources:
-  - resources/**/*
 protocols:
   - name: electron-deep-linking
     schemes:
@@ -21,10 +19,13 @@ linux:
   category: Network
   synopsis: SlackArm
   icon: resources/icons/icon.png
-  target:
-    - target: AppImage
+  target: 
+    - target: rpm
       arch:
         - arm64
+flatpak:
+  runtimeVersion: 23.08
+  baseVersion: 23.08 
 publish:
   - provider: github
     releaseType: release

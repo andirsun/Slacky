@@ -4,8 +4,8 @@
   "description": "Slack on electron for Linux arm64",
   "main": "src/main.js",
   "scripts": {
-    "start": "electron .",
-    "pack": "electron-builder"
+    "start": "electron src/main.js",
+    "pack": "USE_SYSTEM_FPM=1 electron-builder"
   },
   "repository": {
     "type": "git",
