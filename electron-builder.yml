@@ -5,11 +5,11 @@ copyright: Copyright © 2023 Anderson Laverde
 asar: true
 # artifactName: ${productName}.${ext}
 directories:
-  output: dist
+  output: dist/packages
   buildResources: resources
 files:
   - package.json
-  - src/**/*
+  - dist/**/*
   - node_modules
 protocols:
   - name: electron-deep-linking
