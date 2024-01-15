@@ -1,5 +1,4 @@
 import { BrowserWindow, shell } from 'electron';
-import path from 'path'
 
 export default class Main {
   static mainWindow: Electron.BrowserWindow | null
@@ -26,7 +25,6 @@ export default class Main {
       height: 1080,
       title: 'Slack ARM',
       center: true,
-      icon: process.platform === 'linux' ? path.join(__dirname, 'resources/icons/icon.png') : undefined,
       webPreferences: {
         nodeIntegration: true
       }
@@ -44,7 +42,7 @@ export default class Main {
   
     Main.mainWindow.loadURL(SLACK_APP_URL, {
       // TODO: Fix this hacky way to get around Slack's user agent check
-      userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/120.0.6099.71 Safari/537.36'
+      userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/53/7.36 (KHTML, like Gecko) HeadlessChrome/120.0.6099.71 Safari/537.36'
     })
    
     Main.mainWindow.on('closed', Main.onClose);
