@@ -1,4 +1,4 @@
-import { BrowserWindow, shell } from 'electron';
+import { BrowserWindow, shell } from 'electron'
 
 export default class Main {
   static mainWindow: Electron.BrowserWindow | null
@@ -6,9 +6,9 @@ export default class Main {
   static BrowserWindow
 
   private static onWindowAllClosed() {
-    if (process.platform !== 'darwin') {
-      Main.application.quit();
-    }
+    if (process.platform !== 'darwin')
+      Main.application.quit()
+    
   }
 
   private static onClose() {
@@ -45,14 +45,14 @@ export default class Main {
       userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/53/7.36 (KHTML, like Gecko) HeadlessChrome/120.0.6099.71 Safari/537.36'
     })
    
-    Main.mainWindow.on('closed', Main.onClose);
+    Main.mainWindow.on('closed', Main.onClose)
   }
 
   static main(app: Electron.App, browserWindow: typeof BrowserWindow) {
-    Main.BrowserWindow = browserWindow;
-    Main.application = app;
-    Main.application.on('window-all-closed', Main.onWindowAllClosed);
-    Main.application.on('ready', Main.onReady);
+    Main.BrowserWindow = browserWindow
+    Main.application = app
+    Main.application.on('window-all-closed', Main.onWindowAllClosed)
+    Main.application.on('ready', Main.onReady)
 
     /**
      * Define custom protocol handler. Deep linking works on packaged versions of the application ONLY

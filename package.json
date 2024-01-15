@@ -1,7 +1,7 @@
 {
-  "name": "slack-arm64",
+  "name": "slacky",
   "version": "0.0.1",
-  "description": "Slack on electron for Linux arm64",
+  "description": "Slack wrapper for Linux arm64 systems",
   "main": "dist/app/app.js",
   "scripts": {
     "start": "electron .",
@@ -23,8 +23,11 @@
   "devDependencies": {
     "@swc/cli": "^0.1.63",
     "@swc/core": "^1.3.102",
+    "@typescript-eslint/eslint-plugin": "^6.18.1",
+    "@typescript-eslint/parser": "^6.18.1",
     "electron": "^28.1.3",
     "electron-builder": "^24.9.1",
+    "eslint": "^8.56.0",
     "nodemon": "^3.0.2"
   }
 }

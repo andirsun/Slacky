@@ -1,15 +1,14 @@
-appId: com.andersonlaverde.slackarm
-productName: SlackArm
-copyright: Copyright © 2023 Anderson Laverde
+appId: com.andersonlaverde.slacky
+productName: Slacky
+copyright: Copyright © 2024 Anderson Laverde
 ## Pack the app in the read-only Electron format https://github.com/electron/asar
 asar: true
 # artifactName: ${productName}.${ext}
 directories:
   output: dist/packages
-  buildResources: resources
 files:
   - package.json
-  - dist/**/*
+  - dist/app/**/*
   - node_modules
 protocols:
   - name: electron-deep-linking
@@ -18,8 +17,7 @@ protocols:
 linux:
   category: Network
   synopsis: SlackArm
-  icon: resources/icons/icon.png
-  target: 
+  target:
     - target: rpm
       arch:
         - arm64
