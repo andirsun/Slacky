@@ -41,3 +41,4 @@ jobs:
         env:
           # Github token to release the app and upload assets to streamline-releases repo
           GITHUB_TOKEN: ${{ secrets.gh_token }}
+          DEBUG: "@malept/flatpak-bundler"
