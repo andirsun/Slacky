@@ -28,6 +28,8 @@ jobs:
       - name: Install flatpak runtime
         run: |
           flatpak install --no-deps --arch aarch64 --assumeyes runtime/org.freedesktop.Platform/aarch64/23.08
+          flatpak install --no-deps --arch aarch64 --assumeyes runtime/org.freedesktop.Sdk/aarch64/23.08
+          flatpak install --no-deps --arch aarch64 --assumeyes runtime/org.electronjs.Electron2.BaseApp/aarch64/23.08
 
       - name: Check out Git repository
         uses: actions/checkout@v3
