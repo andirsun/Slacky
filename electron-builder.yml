@@ -18,12 +18,10 @@ linux:
   category: Network
   synopsis: SlackArm
   target:
-    # - target: flatpak
-    #   arch:
-    #     - arm64
-    - target: rpm
+    - target: flatpak
       arch:
         - arm64
+  
 flatpak:
   runtimeVersion: 23.08
   baseVersion: 23.08 
