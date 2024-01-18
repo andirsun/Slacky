@@ -13,11 +13,11 @@ jobs:
       image: bilelmoussaoui/flatpak-github-actions:gnome-44
       options: --privileged
     steps:
-      - uses: flatpak/flatpak-github-actions/flatpak-builder@v6
-        with:
-          bundle: palette.flatpak
-          manifest-path: org.gnome.zbrown.Palette.yml
-          cache-key: flatpak-builder-${{ github.sha }}
+      # - uses: flatpak/flatpak-github-actions/flatpak-builder@v6
+      #   with:
+      #     bundle: palette.flatpak
+      #     manifest-path: org.gnome.zbrown.Palette.yml
+      #     cache-key: flatpak-builder-${{ github.sha }}
 
       - name: Check out Git repository
         uses: actions/checkout@v3
