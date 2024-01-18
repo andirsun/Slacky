@@ -3,7 +3,7 @@ name: Release Desktop App
 on:
   push:
     branches:
-      - master
+      - main
 
 jobs:
   release:
