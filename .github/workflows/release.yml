@@ -18,6 +18,16 @@ jobs:
       #     bundle: palette.flatpak
       #     manifest-path: org.gnome.zbrown.Palette.yml
       #     cache-key: flatpak-builder-${{ github.sha }}
+      # - name: install maker-flatpak dependencies
+      #   run: |
+      #     sudo apt-get install flatpak -y
+      #     sudo apt-get install flatpak-builder -y
+      #     sudo apt-get install elfutils -y
+      #     sudo flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
+      #     sudo flatpak install flathub org.freedesktop.Platform/x86_64/19.08 org.freedesktop.Sdk/x86_64/19.08 org.electronjs.Electron2.BaseApp/x86_64/stable -y
+      - name: Install flatpak runtime
+        run: |
+          flatpak install --no-deps --arch aarch64 --assumeyes runtime/org.freedesktop.Platform/aarch64/23.08
 
       - name: Check out Git repository
         uses: actions/checkout@v3
