@@ -9,12 +9,14 @@ jobs:
   release:
     name: Build App
     runs-on: ubuntu-latest
-    container:
-      image: bilelmoussaoui/flatpak-github-actions:gnome-44
-      options: --privileged
+    # container:
+    #   image: bilelmoussaoui/flatpak-github-actions:gnome-44
+    #   options: --privileged
     steps:
       - name: Install flatpak runtime
         run: |
+          sudo apt-get install flatpak -y
+          sudo apt-get install flatpak-builder -y
           flatpak install --no-deps --arch aarch64 --assumeyes runtime/org.freedesktop.Platform/aarch64/23.08
           flatpak install --no-deps --arch aarch64 --assumeyes runtime/org.freedesktop.Sdk/aarch64/23.08
           flatpak install --no-deps --arch aarch64 --assumeyes org.electronjs.Electron2.BaseApp/aarch64/23.08
