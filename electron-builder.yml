@@ -21,9 +21,7 @@ linux:
     - target: flatpak
       arch:
         - arm64
-    - target: rpm
-      arch:
-        - arm64
+  
 flatpak:
   runtimeVersion: 23.08
   baseVersion: 23.08 
