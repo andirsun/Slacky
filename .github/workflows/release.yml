@@ -1,9 +1,9 @@
 name: Release Desktop App
 
-on: pull_request
-  # push:
-  #   branches:
-  #     - main
+on:
+  push:
+    branches:
+      - main
 
 jobs:
   release:
@@ -13,18 +13,6 @@ jobs:
       image: bilelmoussaoui/flatpak-github-actions:gnome-44
       options: --privileged
     steps:
-      # - uses: flatpak/flatpak-github-actions/flatpak-builder@v6
-      #   with:
-      #     bundle: palette.flatpak
-      #     manifest-path: org.gnome.zbrown.Palette.yml
-      #     cache-key: flatpak-builder-${{ github.sha }}
-      # - name: install maker-flatpak dependencies
-      #   run: |
-      #     sudo apt-get install flatpak -y
-      #     sudo apt-get install flatpak-builder -y
-      #     sudo apt-get install elfutils -y
-      #     sudo flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
-      #     sudo flatpak install flathub org.freedesktop.Platform/x86_64/19.08 org.freedesktop.Sdk/x86_64/19.08 org.electronjs.Electron2.BaseApp/x86_64/stable -y
       - name: Install flatpak runtime
         run: |
           flatpak install --no-deps --arch aarch64 --assumeyes runtime/org.freedesktop.Platform/aarch64/23.08
@@ -53,4 +41,3 @@ jobs:
         env:
           # Github token to release the app and upload assets to streamline-releases repo
           GITHUB_TOKEN: ${{ secrets.gh_token }}
-          DEBUG: "@malept/flatpak-bundler"
