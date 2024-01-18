@@ -1,13 +1,14 @@
 {
   "name": "slacky",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Slack wrapper for Linux arm64 systems",
   "main": "dist/app/app.js",
   "scripts": {
     "start": "electron .",
-    "build": "swc build ./src -d dist/app",
+    "build": "swc src -d dist/app",
     "dev": "nodemon --watch src --ext ts --exec \"npm run build && npm run start\"",
-    "pack": "npm run build && USE_SYSTEM_FPM=1 electron-builder"
+    "pack": "npm run build && USE_SYSTEM_FPM=1 electron-builder",
+    "publish": "USE_SYSTEM_FPM=1 electron-builder --publish always"
   },
   "repository": {
     "type": "git",
