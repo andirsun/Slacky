@@ -24,6 +24,7 @@ export default class Main {
       width: 1920,
       height: 1080,
       title: 'Slack ARM',
+      autoHideMenuBar: true,
       center: true,
       webPreferences: {
         nodeIntegration: true
