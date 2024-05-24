@@ -2,6 +2,11 @@
 # See: https://circleci.com/docs/configuration-reference
 version: 2.1
 
+orbs:
+  # Use the official CircleCI Node orb
+  # See: https://circleci.com/developer/orbs/orb/circleci/node
+  node: circleci/node@5.2.0
+
 # Define a job to be invoked later in a workflow.
 # See: https://circleci.com/docs/jobs-steps/#jobs-overview & https://circleci.com/docs/configuration-reference/#jobs
 jobs:
@@ -9,12 +14,17 @@ jobs:
     machine:
       image: ubuntu-2204:current
     resource_class: arm.large
-
+    executor: node/default
     # Add steps to the job
     # See: https://circleci.com/docs/jobs-steps/#steps-overview & https://circleci.com/docs/configuration-reference/#steps
     steps:
       # Checkout the code as the first step.
       - checkout
+      - run:
+          name: "Install Flatpak"
+          command: |
+            sudo apt-get update
+            sudo apt-get install -y flatpak
       - run:
           name: "Set up Flatpak runtime"
           command: |
