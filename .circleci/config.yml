@@ -34,7 +34,16 @@ jobs:
           node-version: "12.13.1"
       - run:
           name: "Install dependencies"
-          command: npm ci
+          command: npm install
+      - run:
+          name: "Build App"
+          command: npm run build
+      - run:
+          name: "Sign, Notarize and Release new Version"
+          command: npm run publish
+          environment:
+            # Github token to release the app and upload assets to streamline-releases repo
+            GITHUB_TOKEN: $GH_TOKEN
 
 # Orchestrate jobs using workflows
 # See: https://circleci.com/docs/workflows/ & https://circleci.com/docs/configuration-reference/#workflows
