@@ -21,16 +21,9 @@ jobs:
       - checkout
       - node/install:
           node-version: "20"
-      # - run:
-      #     name: "Install Flatpak"
-      #     command: |
-      #       sudo apt-get install -y flatpak
-      # - run:
-      #     name: "Set up Flatpak runtime"
-      #     command: |
-      #       flatpak install --no-deps --arch aarch64 --assumeyes runtime/org.freedesktop.Platform/aarch64/23.08
-      #       flatpak install --no-deps --arch aarch64 --assumeyes runtime/org.freedesktop.Sdk/aarch64/23.08
-      #       flatpak install --no-deps --arch aarch64 --assumeyes org.electronjs.Electron2.BaseApp/aarch64/23.08
+      - run:
+          name: "Install FPM enviroment"
+          command: sudo apt-get install ruby-dev build-essential && sudo gem i fpm -f
       - run:
           name: "Install dependencies"
           command: npm install
