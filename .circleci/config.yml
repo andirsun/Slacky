@@ -14,7 +14,6 @@ jobs:
     machine:
       image: ubuntu-2204:current
     resource_class: arm.large
-    executor: node/default
     # Add steps to the job
     # See: https://circleci.com/docs/jobs-steps/#steps-overview & https://circleci.com/docs/configuration-reference/#steps
     steps:
@@ -31,6 +30,11 @@ jobs:
             flatpak install --no-deps --arch aarch64 --assumeyes runtime/org.freedesktop.Platform/aarch64/23.08
             flatpak install --no-deps --arch aarch64 --assumeyes runtime/org.freedesktop.Sdk/aarch64/23.08
             flatpak install --no-deps --arch aarch64 --assumeyes org.electronjs.Electron2.BaseApp/aarch64/23.08
+      - node/install:
+          node-version: "12.13.1"
+      - run:
+          name: "Install dependencies"
+          command: npm ci
 
 # Orchestrate jobs using workflows
 # See: https://circleci.com/docs/workflows/ & https://circleci.com/docs/configuration-reference/#workflows
