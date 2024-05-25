@@ -39,5 +39,4 @@ jobs:
       - name: Sign, Notarize and Release new Version
         run: bun run publish
         env:
-          # Github token to release the app and upload assets to streamline-releases repo
           GITHUB_TOKEN: ${{ secrets.gh_token }}

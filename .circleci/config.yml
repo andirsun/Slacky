@@ -39,9 +39,8 @@ jobs:
           command: npm run build
       - run:
           name: "Sign, Notarize and Release new Version"
-          command: npm run publish
+          command: npm run publish-ci
           environment:
-            # Github token to release the app and upload assets to streamline-releases repo
             GITHUB_TOKEN: $GH_TOKEN
 
 # Orchestrate jobs using workflows

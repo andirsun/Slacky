@@ -8,7 +8,9 @@
     "build": "swc src -d dist/app",
     "dev": "nodemon --watch src --ext ts --exec \"npm run build && npm run start\"",
     "pack": "npm run build && USE_SYSTEM_FPM=1 electron-builder",
-    "publish": "USE_SYSTEM_FPM=1 electron-builder --publish always"
+    "pack-ci": "npm run build && electron-builder --linux",
+    "publish": "USE_SYSTEM_FPM=1 electron-builder --publish always",
+    "publish-ci": "electron-builder --linux --publish always"
   },
   "repository": {
     "type": "git",
