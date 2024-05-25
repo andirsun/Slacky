@@ -23,7 +23,7 @@ jobs:
           node-version: "20"
       - run:
           name: "Install FPM enviroment"
-          command: sudo apt-get install ruby-dev build-essential && sudo gem i fpm -f
+          command: sudo apt-get install ruby-dev build-essential rpm && sudo gem i fpm -f
       - run:
           name: "Install dependencies"
           command: npm install
