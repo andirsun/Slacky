@@ -19,19 +19,18 @@ jobs:
     steps:
       # Checkout the code as the first step.
       - checkout
-      - run:
-          name: "Install Flatpak"
-          command: |
-            sudo apt-get update
-            sudo apt-get install -y flatpak
+      - node/install:
+          node-version: "20"
+      # - run:
+      #     name: "Install Flatpak"
+      #     command: |
+      #       sudo apt-get install -y flatpak
       # - run:
       #     name: "Set up Flatpak runtime"
       #     command: |
       #       flatpak install --no-deps --arch aarch64 --assumeyes runtime/org.freedesktop.Platform/aarch64/23.08
       #       flatpak install --no-deps --arch aarch64 --assumeyes runtime/org.freedesktop.Sdk/aarch64/23.08
       #       flatpak install --no-deps --arch aarch64 --assumeyes org.electronjs.Electron2.BaseApp/aarch64/23.08
-      - node/install:
-          node-version: "12.13.1"
       - run:
           name: "Install dependencies"
           command: npm install
