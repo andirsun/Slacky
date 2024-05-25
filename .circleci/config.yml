@@ -24,12 +24,12 @@ jobs:
           command: |
             sudo apt-get update
             sudo apt-get install -y flatpak
-      - run:
-          name: "Set up Flatpak runtime"
-          command: |
-            flatpak install --no-deps --arch aarch64 --assumeyes runtime/org.freedesktop.Platform/aarch64/23.08
-            flatpak install --no-deps --arch aarch64 --assumeyes runtime/org.freedesktop.Sdk/aarch64/23.08
-            flatpak install --no-deps --arch aarch64 --assumeyes org.electronjs.Electron2.BaseApp/aarch64/23.08
+      # - run:
+      #     name: "Set up Flatpak runtime"
+      #     command: |
+      #       flatpak install --no-deps --arch aarch64 --assumeyes runtime/org.freedesktop.Platform/aarch64/23.08
+      #       flatpak install --no-deps --arch aarch64 --assumeyes runtime/org.freedesktop.Sdk/aarch64/23.08
+      #       flatpak install --no-deps --arch aarch64 --assumeyes org.electronjs.Electron2.BaseApp/aarch64/23.08
       - node/install:
           node-version: "12.13.1"
       - run:
