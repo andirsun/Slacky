@@ -7,6 +7,18 @@ orbs:
   # See: https://circleci.com/developer/orbs/orb/circleci/node
   node: circleci/node@5.2.0
 
+# Orchestrate jobs using workflows
+# See: https://circleci.com/docs/workflows/ & https://circleci.com/docs/configuration-reference/#workflows
+workflows:
+  release-app:
+    jobs:
+      - release:
+          # Run this job only when a commit is pushed to the main branch.
+          filters:
+            branches:
+              only:
+                - main
+
 # Define a job to be invoked later in a workflow.
 # See: https://circleci.com/docs/jobs-steps/#jobs-overview & https://circleci.com/docs/configuration-reference/#jobs
 jobs:
@@ -36,10 +48,3 @@ jobs:
           environment:
             GITHUB_TOKEN: $GH_TOKEN
 
-# Orchestrate jobs using workflows
-# See: https://circleci.com/docs/workflows/ & https://circleci.com/docs/configuration-reference/#workflows
-workflows:
-  release-app: # This is the name of the workflow, feel free to change it to better match your workflow.
-    # Inside the workflow, you define the jobs you want to run.
-    jobs:
-      - release
