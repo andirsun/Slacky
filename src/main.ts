@@ -1,4 +1,23 @@
-import { BrowserWindow, shell } from 'electron'
+import { BrowserWindow, shell, Session, OnBeforeSendHeadersListenerDetails, BeforeSendResponse } from 'electron'
+import enhanceWebRequest from 'electron-better-web-request'
+
+// TODO: Fix this hacky way to get around Slack's user agent check
+export const defaultUserAgent = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/129.0.0.0 Safari/537.36'
+
+export const enhanceSession = (session: Session) => {
+  enhanceWebRequest(session)
+  session.setUserAgent(defaultUserAgent)
+  session.webRequest.onBeforeSendHeaders(
+    (details: OnBeforeSendHeadersListenerDetails, callback: (beforeSendResponse: BeforeSendResponse) => void) => {
+      details.requestHeaders['User-Agent'] = defaultUserAgent
+      details.requestHeaders['Referer'] = details.referrer
+      callback({
+        cancel: false,
+        requestHeaders: details.requestHeaders
+      })
+    }
+  )
+}
 
 export default class Main {
   static mainWindow: Electron.BrowserWindow | null
@@ -30,20 +49,33 @@ export default class Main {
         nodeIntegration: true
       }
     })
-  
+
     /**
-     * Open links in the default browser
+     * Open links in the default browser except for slack.com operations.
      */
-    Main.mainWindow.webContents.setWindowOpenHandler(({url}) => {
-      void shell.openExternal(url)
-      // We need to return 'deny' in order to not open a new electron window
-      // Works like e.preventDefault()
-      return {action: 'deny'}
+    Main.mainWindow.webContents.setWindowOpenHandler(({ url }) => {
+      if (url.includes('slack.com')) {
+        // Open if URL belongs to slack.com
+        return { action: 'allow' }
+      } else {
+        // Open external links in the system's default browser
+        shell.openExternal(url)
+        return { action: 'deny' } // Deny Electron from opening new windows directly
+      }
     })
-  
+
+    // Intercept link navigation within the page
+    Main.mainWindow.webContents.on('will-navigate', (event, url) => {
+      if (!url.includes('slack.com')) {
+        event.preventDefault() // Prevent navigation
+        shell.openExternal(url) // Open in external OS browser
+        return { action: 'deny' }
+      }
+      return { action: 'allow' }
+    })
+
     Main.mainWindow.loadURL(SLACK_APP_URL, {
-      // TODO: Fix this hacky way to get around Slack's user agent check
-      userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/53/7.36 (KHTML, like Gecko) HeadlessChrome/120.0.6099.71 Safari/537.36'
+      userAgent: defaultUserAgent
     })
    
     Main.mainWindow.on('closed', Main.onClose)
@@ -54,6 +86,10 @@ export default class Main {
     Main.application = app
     Main.application.on('window-all-closed', Main.onWindowAllClosed)
     Main.application.on('ready', Main.onReady)
+
+    app.on('session-created', (session) => {
+      enhanceSession(session)
+    })
 
     /**
      * Define custom protocol handler. Deep linking works on packaged versions of the application ONLY
