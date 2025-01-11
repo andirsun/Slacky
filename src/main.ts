@@ -1,15 +1,14 @@
 import { BrowserWindow, shell, Session, OnBeforeSendHeadersListenerDetails, BeforeSendResponse } from 'electron'
 import enhanceWebRequest from 'electron-better-web-request'
 
-// TODO: Fix this hacky way to get around Slack's user agent check
-export const defaultUserAgent = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/129.0.0.0 Safari/537.36'
+const defaultUserAgent = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/129.0.0.0 Safari/537.36'
 
-export const enhanceSession = (session: Session) => {
+const enhanceSession = (session: Session) => {
   enhanceWebRequest(session)
-  session.setUserAgent(defaultUserAgent)
+  session.setUserAgent(defaultUserAgent + ' (Slack)')
   session.webRequest.onBeforeSendHeaders(
     (details: OnBeforeSendHeadersListenerDetails, callback: (beforeSendResponse: BeforeSendResponse) => void) => {
-      details.requestHeaders['User-Agent'] = defaultUserAgent
+      details.requestHeaders['User-Agent'] = defaultUserAgent + ' (Slack)'
       details.requestHeaders['Referer'] = details.referrer
       callback({
         cancel: false,
@@ -46,6 +45,7 @@ export default class Main {
       autoHideMenuBar: true,
       center: true,
       webPreferences: {
+        contextIsolation: true,
         nodeIntegration: true
       }
     })
@@ -75,7 +75,7 @@ export default class Main {
     })
 
     Main.mainWindow.loadURL(SLACK_APP_URL, {
-      userAgent: defaultUserAgent
+      userAgent: defaultUserAgent + ' (Slack)',
     })
    
     Main.mainWindow.on('closed', Main.onClose)
