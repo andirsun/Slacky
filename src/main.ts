@@ -23,8 +23,8 @@ export default class Main {
       roundedCorners: true,
       width: 1920,
       height: 1080,
-      title: 'Slack ARM',
       autoHideMenuBar: true,
+      title: 'Slacky',
       center: true,
       webPreferences: {
         nodeIntegration: true
@@ -42,8 +42,10 @@ export default class Main {
     })
   
     Main.mainWindow.loadURL(SLACK_APP_URL, {
-      // TODO: Fix this hacky way to get around Slack's user agent check
-      userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/53/7.36 (KHTML, like Gecko) HeadlessChrome/120.0.6099.71 Safari/537.36'
+      /**
+       * We have to emulate a supported Browser because arm64 + Electron is not supported by slack client app
+      */
+      userAgent: 'Mozilla/5.0 (X11; Linux aarch64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36'
     })
    
     Main.mainWindow.on('closed', Main.onClose)
