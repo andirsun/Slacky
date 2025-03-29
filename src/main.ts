@@ -87,7 +87,7 @@ export default class Main {
     Main.application.on('window-all-closed', Main.onWindowAllClosed)
     Main.application.on('ready', Main.onReady)
 
-    app.on('session-created', (session) => {
+    Main.application.on('session-created', (session) => {
       enhanceSession(session)
     })
 
