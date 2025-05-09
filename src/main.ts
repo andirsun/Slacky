@@ -43,7 +43,7 @@ export default class Main {
   
     Main.mainWindow.loadURL(SLACK_APP_URL, {
       // TODO: Fix this hacky way to get around Slack's user agent check
-      userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/53/7.36 (KHTML, like Gecko) HeadlessChrome/120.0.6099.71 Safari/537.36'
+      userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/53/7.36 (KHTML, like Gecko) HeadlessChrome/135.0.7049.95 Safari/537.36'
     })
    
     Main.mainWindow.on('closed', Main.onClose)
