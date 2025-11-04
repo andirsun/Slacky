@@ -1,7 +1,7 @@
 import { BrowserWindow, shell, Session, OnBeforeSendHeadersListenerDetails, BeforeSendResponse } from 'electron'
 import enhanceWebRequest from 'electron-better-web-request'
 
-const defaultUserAgent = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/129.0.0.0 Safari/537.36'
+const defaultUserAgent = 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.3'
 
 const enhanceSession = (session: Session) => {
   enhanceWebRequest(session)
@@ -87,7 +87,7 @@ export default class Main {
     Main.application.on('window-all-closed', Main.onWindowAllClosed)
     Main.application.on('ready', Main.onReady)
 
-    app.on('session-created', (session) => {
+    Main.application.on('session-created', (session) => {
       enhanceSession(session)
     })
 
