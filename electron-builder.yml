@@ -21,7 +21,7 @@ linux:
     - target: AppImage
       arch:
         - arm64
-    - target: deb
+    - target: rpm
       arch:
         - arm64
 publish:
