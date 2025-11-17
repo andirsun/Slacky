@@ -1,6 +1,6 @@
 {
   "name": "slacky",
-  "version": "0.0.6",
+  "version": "0.0.7",
   "description": "Slack wrapper for Linux arm64 systems",
   "main": "dist/app/src/app.js",
   "scripts": {
