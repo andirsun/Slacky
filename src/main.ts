@@ -5,10 +5,10 @@ const defaultUserAgent = 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KH
 
 const enhanceSession = (session: Session) => {
   enhanceWebRequest(session)
-  session.setUserAgent(defaultUserAgent + ' (Slack)')
+  session.setUserAgent(defaultUserAgent)
   session.webRequest.onBeforeSendHeaders(
     (details: OnBeforeSendHeadersListenerDetails, callback: (beforeSendResponse: BeforeSendResponse) => void) => {
-      details.requestHeaders['User-Agent'] = defaultUserAgent + ' (Slack)'
+      details.requestHeaders['User-Agent'] = defaultUserAgent
       details.requestHeaders['Referer'] = details.referrer
       callback({
         cancel: false,
@@ -75,7 +75,7 @@ export default class Main {
     })
 
     Main.mainWindow.loadURL(SLACK_APP_URL, {
-      userAgent: defaultUserAgent + ' (Slack)',
+      userAgent: defaultUserAgent,
     })
    
     Main.mainWindow.on('closed', Main.onClose)
