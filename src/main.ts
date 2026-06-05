@@ -1,5 +1,7 @@
-import { BrowserWindow, shell, Session, OnBeforeSendHeadersListenerDetails, BeforeSendResponse } from 'electron'
+import { BrowserWindow, shell, Session, OnBeforeSendHeadersListenerDetails, BeforeSendResponse, ipcMain } from 'electron'
 import enhanceWebRequest from 'electron-better-web-request'
+import * as path from 'path'
+import { SlackyEvent } from './events'
 
 const defaultUserAgent = 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36'
 
@@ -45,8 +47,14 @@ export default class Main {
       autoHideMenuBar: true,
       center: true,
       webPreferences: {
-        contextIsolation: true,
-        nodeIntegration: true
+        // contextIsolation must be off so the preload can patch the same
+        // `window.Notification` that Slack's page scripts use. nodeIntegration
+        // stays off so the remote Slack code still gets no Node access; the
+        // preload keeps Node/IPC privileges via its own closure.
+        contextIsolation: false,
+        nodeIntegration: false,
+        sandbox: false,
+        preload: path.join(__dirname, 'preload.js')
       }
     })
 
@@ -78,7 +86,26 @@ export default class Main {
       userAgent: defaultUserAgent,
     })
    
+    // Stop flashing the taskbar entry once the window is actually focused.
+    Main.mainWindow.on('focus', () => Main.mainWindow?.flashFrame(false))
+
     Main.mainWindow.on('closed', Main.onClose)
+  }
+
+  /**
+   * Bring the Slacky window back to the foreground. Triggered from the preload
+   * when a Slack notification is clicked. On Linux (especially Wayland) the
+   * compositor may refuse to let an app raise itself, so we restore + show +
+   * focus and fall back to flashing the taskbar entry as an urgency hint.
+   */
+  private static onNotificationClicked() {
+    const win = Main.mainWindow
+    if (!win) return
+
+    if (win.isMinimized()) win.restore()
+    win.show()
+    win.focus()
+    win.flashFrame(true)
   }
 
   static main(app: Electron.App, browserWindow: typeof BrowserWindow) {
@@ -86,6 +113,8 @@ export default class Main {
     Main.application = app
     Main.application.on('window-all-closed', Main.onWindowAllClosed)
     Main.application.on('ready', Main.onReady)
+
+    ipcMain.on(SlackyEvent.NotificationClicked, Main.onNotificationClicked)
 
     Main.application.on('session-created', (session) => {
       enhanceSession(session)
