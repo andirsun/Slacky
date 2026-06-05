@@ -1,4 +1,5 @@
 import { ipcRenderer } from 'electron'
+import { SlackyEvent } from './events'
 
 /**
  * Slack's web client raises desktop notifications through the HTML5
@@ -22,7 +23,7 @@ if (NativeNotification) {
     construct(target, args: [string, NotificationOptions?]) {
       const notification = new target(...args)
       notification.addEventListener('click', () => {
-        ipcRenderer.send('slacky:notification-clicked')
+        ipcRenderer.send(SlackyEvent.NotificationClicked)
       })
       return notification
     }

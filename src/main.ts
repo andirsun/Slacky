@@ -1,6 +1,7 @@
 import { BrowserWindow, shell, Session, OnBeforeSendHeadersListenerDetails, BeforeSendResponse, ipcMain } from 'electron'
 import enhanceWebRequest from 'electron-better-web-request'
 import * as path from 'path'
+import { SlackyEvent } from './events'
 
 const defaultUserAgent = 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36'
 
@@ -113,7 +114,7 @@ export default class Main {
     Main.application.on('window-all-closed', Main.onWindowAllClosed)
     Main.application.on('ready', Main.onReady)
 
-    ipcMain.on('slacky:notification-clicked', Main.onNotificationClicked)
+    ipcMain.on(SlackyEvent.NotificationClicked, Main.onNotificationClicked)
 
     Main.application.on('session-created', (session) => {
       enhanceSession(session)
