@@ -18,6 +18,39 @@ const enhanceSession = (session: Session) => {
   )
 }
 
+/**
+ * A URL is "external" only when it is a real http(s) link that does not belong
+ * to Slack. Internal targets — most importantly `about:blank`, which Slack uses
+ * when it pops a huddle out via `window.open()` and then drives the returned
+ * window itself — must stay inside Electron.
+ */
+const isExternalUrl = (url: string): boolean =>
+  /^https?:\/\//i.test(url) && !url.includes('slack.com')
+
+/**
+ * Route genuinely external links to the system browser while letting Slack's
+ * own windows (slack.com pages and the `about:blank` huddle pop-out) open as
+ * native Electron windows. Denying the pop-out used to make `window.open()`
+ * return null, which Slack reported as "Unable to create window".
+ */
+const applyExternalLinkPolicy = (contents: Electron.WebContents) => {
+  contents.setWindowOpenHandler(({ url }) => {
+    if (isExternalUrl(url)) {
+      shell.openExternal(url)
+      return { action: 'deny' } // Deny Electron from opening new windows directly
+    }
+    return { action: 'allow' }
+  })
+
+  // Intercept in-page navigation; keep external links in the OS browser.
+  contents.on('will-navigate', (event, url) => {
+    if (isExternalUrl(url)) {
+      event.preventDefault()
+      shell.openExternal(url)
+    }
+  })
+}
+
 export default class Main {
   static mainWindow: Electron.BrowserWindow | null
   static application: Electron.App
@@ -56,28 +89,15 @@ export default class Main {
       }
     })
 
-    /**
-     * Open links in the default browser except for slack.com operations.
-     */
-    Main.mainWindow.webContents.setWindowOpenHandler(({ url }) => {
-      if (url.includes('slack.com')) {
-        // Open if URL belongs to slack.com
-        return { action: 'allow' }
-      } else {
-        // Open external links in the system's default browser
-        shell.openExternal(url)
-        return { action: 'deny' } // Deny Electron from opening new windows directly
-      }
-    })
+    // Keep external links in the OS browser; let Slack's own windows
+    // (including the about:blank huddle pop-out) open natively.
+    applyExternalLinkPolicy(Main.mainWindow.webContents)
 
-    // Intercept link navigation within the page
-    Main.mainWindow.webContents.on('will-navigate', (event, url) => {
-      if (!url.includes('slack.com')) {
-        event.preventDefault() // Prevent navigation
-        shell.openExternal(url) // Open in external OS browser
-        return { action: 'deny' }
-      }
-      return { action: 'allow' }
+    // Apply the same policy to windows Slack opens (e.g. the popped-out huddle)
+    // so links clicked inside them still go to the OS browser.
+    Main.mainWindow.webContents.on('did-create-window', (childWindow) => {
+      childWindow.setMenuBarVisibility(false)
+      applyExternalLinkPolicy(childWindow.webContents)
     })
 
     Main.mainWindow.loadURL(SLACK_APP_URL, {
