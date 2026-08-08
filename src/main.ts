@@ -103,9 +103,12 @@ export default class Main {
     Main.mainWindow.loadURL(SLACK_APP_URL, {
       userAgent: defaultUserAgent,
     })
-   
+
     // Stop flashing the taskbar entry once the window is actually focused.
-    Main.mainWindow.on('focus', () => Main.mainWindow?.flashFrame(false))
+    Main.mainWindow.on('focus', () => {
+      Main.mainWindow?.flashFrame(false)
+      Main.application.badgeCount = 0
+    })
 
     Main.mainWindow.on('closed', Main.onClose)
   }
