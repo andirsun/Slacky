@@ -20,12 +20,23 @@ const enhanceSession = (session: Session) => {
 
 /**
  * A URL is "external" only when it is a real http(s) link that does not belong
- * to Slack. Internal targets — most importantly `about:blank`, which Slack uses
- * when it pops a huddle out via `window.open()` and then drives the returned
- * window itself — must stay inside Electron.
+ * to Slack or a supported authentication provider. Internal targets — most
+ * importantly `about:blank`, which Slack uses when it pops a huddle out via
+ * `window.open()` and then drives the returned window itself — must stay inside
+ * Electron.
  */
-const isExternalUrl = (url: string): boolean =>
-  /^https?:\/\//i.test(url) && !url.includes('slack.com')
+const isExternalUrl = (url: string): boolean => {
+  if (!/^https?:\/\//i.test(url)) return false
+
+  try {
+    const { hostname } = new URL(url)
+    const isSlack = hostname === 'slack.com' || hostname.endsWith('.slack.com')
+    const isGoogleAuth = hostname === 'accounts.google.com'
+    return !isSlack && !isGoogleAuth
+  } catch {
+    return true
+  }
+}
 
 /**
  * Route genuinely external links to the system browser while letting Slack's
