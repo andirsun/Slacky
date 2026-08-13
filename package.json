@@ -1,10 +1,11 @@
 {
   "name": "slacky",
-  "version": "0.0.10",
+  "version": "0.0.17",
   "description": "Slack wrapper for Linux arm64 systems",
   "main": "dist/app/src/app.js",
   "scripts": {
     "start": "electron .",
+    "start:debug": "npm run build && electron --no-sandbox --enable-logging=stderr --v=1 .",
     "build": "swc src -d dist/app",
     "dev": "nodemon --watch src --ext ts --exec \"npm run build && npm run start\"",
     "pack": "npm run build && USE_SYSTEM_FPM=1 electron-builder",
@@ -27,11 +28,14 @@
     "@stylistic/eslint-plugin": "^5.10.0",
     "@swc/cli": "^0.8.1",
     "@swc/core": "^1.15.41",
-    "electron": "^42.4.0",
+    "electron": "^43.3.0",
     "electron-builder": "^26.15.2",
     "eslint": "^10.4.1",
     "nodemon": "^3.1.14",
     "typescript": "^6.0.3",
     "typescript-eslint": "^8.61.0"
+  },
+  "dependencies": {
+    "electron-webauthn-linux": "file:../scratch/electron-webauthn-linux"
   }
 }

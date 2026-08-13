@@ -1,5 +1,26 @@
 import { ipcRenderer } from 'electron'
+import { webauthnPageScript } from 'electron-webauthn-linux/dist/preload'
 import { SlackyEvent } from './events'
+
+declare global {
+  interface Window {
+    electronWebAuthn?: {
+      create: (options: unknown) => Promise<unknown>
+      get: (options: unknown) => Promise<unknown>
+      hasCredentials: (rpId: string) => Promise<unknown>
+    }
+  }
+}
+
+if (process.platform === 'linux') {
+  window.electronWebAuthn = {
+    create: (options: unknown) => ipcRenderer.invoke('webauthn:create', options),
+    get: (options: unknown) => ipcRenderer.invoke('webauthn:get', options),
+    hasCredentials: (rpId: string) => ipcRenderer.invoke('webauthn:hasCredentials', rpId)
+  }
+
+  window.eval(webauthnPageScript)
+}
 
 /**
  * Slack's web client raises desktop notifications through the HTML5
