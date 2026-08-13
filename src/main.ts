@@ -1,4 +1,5 @@
 import { BrowserWindow, shell, Session, OnBeforeSendHeadersListenerDetails, BeforeSendResponse, ipcMain } from 'electron'
+import { setupWebAuthn } from 'electron-webauthn-linux'
 import * as path from 'path'
 import { SlackyEvent } from './events'
 
@@ -24,8 +25,28 @@ const enhanceSession = (session: Session) => {
  * when it pops a huddle out via `window.open()` and then drives the returned
  * window itself — must stay inside Electron.
  */
-const isExternalUrl = (url: string): boolean =>
-  /^https?:\/\//i.test(url) && !url.includes('slack.com')
+const isMicrosoftSignInUrl = (url: string): boolean => {
+  try {
+    const hostname = new URL(url).hostname.toLowerCase()
+    return hostname === 'login.live.com' ||
+      hostname === 'login.microsoft.com' ||
+      hostname.endsWith('.microsoftonline.com') ||
+      hostname.endsWith('.microsoftonline-p.com') ||
+      hostname.endsWith('.login.microsoft.com') ||
+      hostname.endsWith('.msauth.net') ||
+      hostname.endsWith('.msftauth.net') ||
+      hostname.endsWith('.windows.net')
+  } catch {
+    return false
+  }
+}
+
+const isExternalUrl = (url: string, hasPostBody = false): boolean =>
+  /^https?:\/\//i.test(url) &&
+  // Form POSTs cannot be handed to the OS browser without losing the body.
+  !hasPostBody &&
+  !url.includes('slack.com') &&
+  !isMicrosoftSignInUrl(url)
 
 /**
  * Route genuinely external links to the system browser while letting Slack's
@@ -34,12 +55,24 @@ const isExternalUrl = (url: string): boolean =>
  * return null, which Slack reported as "Unable to create window".
  */
 const applyExternalLinkPolicy = (contents: Electron.WebContents) => {
-  contents.setWindowOpenHandler(({ url }) => {
-    if (isExternalUrl(url)) {
+  contents.setWindowOpenHandler(({ url, postBody }) => {
+    if (isExternalUrl(url, Boolean(postBody))) {
       shell.openExternal(url)
       return { action: 'deny' } // Deny Electron from opening new windows directly
     }
-    return { action: 'allow' }
+    return {
+      action: 'allow',
+      overrideBrowserWindowOptions: {
+        show: true,
+        autoHideMenuBar: true,
+        webPreferences: {
+          contextIsolation: false,
+          nodeIntegration: false,
+          sandbox: false,
+          preload: path.join(__dirname, 'preload.js')
+        }
+      }
+    }
   })
 
   // Intercept in-page navigation; keep external links in the OS browser.
@@ -67,8 +100,17 @@ export default class Main {
     Main.mainWindow = null
   }
 
-  private static onReady() {
+  private static async onReady() {
     const SLACK_APP_URL = 'https://app.slack.com/client'
+
+    try {
+      await setupWebAuthn({
+        storagePath: path.join(Main.application.getPath('userData'), 'webauthn'),
+        enableHardwareKeys: true
+      })
+    } catch (error) {
+      console.error('[slacky:webauthn] Failed to initialize WebAuthn support:', error)
+    }
   
     Main.mainWindow = new BrowserWindow({
       roundedCorners: true,
@@ -97,6 +139,8 @@ export default class Main {
     // so links clicked inside them still go to the OS browser.
     Main.mainWindow.webContents.on('did-create-window', (childWindow) => {
       childWindow.setMenuBarVisibility(false)
+      childWindow.show()
+      childWindow.focus()
       applyExternalLinkPolicy(childWindow.webContents)
     })
 
