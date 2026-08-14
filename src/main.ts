@@ -4,7 +4,7 @@ import {
   Session,
   OnBeforeSendHeadersListenerDetails,
   BeforeSendResponse,
-  ipcMain,
+  ipcMain
 } from 'electron'
 import * as path from 'path'
 import { SlackyEvent } from './events'
@@ -23,7 +23,7 @@ const enhanceSession = (session: Session) => {
       details.requestHeaders['Referer'] = details.referrer
       callback({
         cancel: false,
-        requestHeaders: details.requestHeaders,
+        requestHeaders: details.requestHeaders
       })
     }
   )
@@ -94,8 +94,8 @@ export default class Main {
         contextIsolation: false,
         nodeIntegration: false,
         sandbox: false,
-        preload: path.join(__dirname, 'preload.js'),
-      },
+        preload: path.join(__dirname, 'preload.js')
+      }
     })
 
     // Keep external links in the OS browser; let Slack's own windows
@@ -110,7 +110,7 @@ export default class Main {
     })
 
     Main.mainWindow.loadURL(SLACK_APP_URL, {
-      userAgent: defaultUserAgent,
+      userAgent: defaultUserAgent
     })
 
     // Stop flashing the taskbar entry once the window is actually focused.

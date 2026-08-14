@@ -26,6 +26,6 @@ if (NativeNotification) {
         ipcRenderer.send(SlackyEvent.NotificationClicked)
       })
       return notification
-    },
+    }
   })
 }
