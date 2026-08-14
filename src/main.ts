@@ -1,18 +1,29 @@
-import { BrowserWindow, shell, Session, OnBeforeSendHeadersListenerDetails, BeforeSendResponse, ipcMain } from 'electron'
+import {
+  BrowserWindow,
+  shell,
+  Session,
+  OnBeforeSendHeadersListenerDetails,
+  BeforeSendResponse,
+  ipcMain,
+} from 'electron'
 import * as path from 'path'
 import { SlackyEvent } from './events'
 
-const defaultUserAgent = 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36'
+const defaultUserAgent =
+  'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36'
 
 const enhanceSession = (session: Session) => {
   session.setUserAgent(defaultUserAgent)
   session.webRequest.onBeforeSendHeaders(
-    (details: OnBeforeSendHeadersListenerDetails, callback: (beforeSendResponse: BeforeSendResponse) => void) => {
+    (
+      details: OnBeforeSendHeadersListenerDetails,
+      callback: (beforeSendResponse: BeforeSendResponse) => void
+    ) => {
       details.requestHeaders['User-Agent'] = defaultUserAgent
       details.requestHeaders['Referer'] = details.referrer
       callback({
         cancel: false,
-        requestHeaders: details.requestHeaders
+        requestHeaders: details.requestHeaders,
       })
     }
   )
@@ -57,19 +68,17 @@ export default class Main {
   static BrowserWindow
 
   private static onWindowAllClosed() {
-    if (process.platform !== 'darwin')
-      Main.application.quit()
-    
+    if (process.platform !== 'darwin') Main.application.quit()
   }
 
   private static onClose() {
-    // Dereference the window object. 
+    // Dereference the window object.
     Main.mainWindow = null
   }
 
   private static onReady() {
     const SLACK_APP_URL = 'https://app.slack.com/client'
-  
+
     Main.mainWindow = new BrowserWindow({
       roundedCorners: true,
       width: 1920,
@@ -85,8 +94,8 @@ export default class Main {
         contextIsolation: false,
         nodeIntegration: false,
         sandbox: false,
-        preload: path.join(__dirname, 'preload.js')
-      }
+        preload: path.join(__dirname, 'preload.js'),
+      },
     })
 
     // Keep external links in the OS browser; let Slack's own windows
@@ -103,7 +112,7 @@ export default class Main {
     Main.mainWindow.loadURL(SLACK_APP_URL, {
       userAgent: defaultUserAgent,
     })
-   
+
     // Stop flashing the taskbar entry once the window is actually focused.
     Main.mainWindow.on('focus', () => Main.mainWindow?.flashFrame(false))
 
