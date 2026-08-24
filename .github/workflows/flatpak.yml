@@ -1,0 +1,108 @@
+name: Flatpak
+
+on:
+  push:
+    branches: [main]
+    paths: ['flatpak/**', 'src/**', 'package.json', 'package-lock.json', 'electron-builder.yml', '.github/workflows/flatpak.yml']
+  pull_request:
+    paths: ['flatpak/**', 'src/**', 'package.json', 'package-lock.json', 'electron-builder.yml', '.github/workflows/flatpak.yml']
+  workflow_dispatch:
+
+concurrency:
+  group: flatpak-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  MANIFEST: flatpak/com.andersonlaverde.slacky.yml
+  APP_ID: com.andersonlaverde.slacky
+
+jobs:
+  metadata:
+    name: Validate metadata
+    runs-on: ubuntu-24.04-arm
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install validators
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends appstream desktop-file-utils
+
+      - name: Validate AppStream metainfo
+        run: appstreamcli validate --explain flatpak/${{ env.APP_ID }}.metainfo.xml
+
+      - name: Validate desktop entry
+        run: desktop-file-validate flatpak/${{ env.APP_ID }}.desktop
+
+  build:
+    name: Build flatpak (arm64)
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install flatpak-builder
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends flatpak flatpak-builder
+          flatpak remote-add --user --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo
+
+      - name: Install runtimes
+        run: |
+          flatpak install --user -y --noninteractive flathub \
+            org.freedesktop.Platform//24.08 \
+            org.freedesktop.Sdk//24.08 \
+            org.freedesktop.Sdk.Extension.node22//24.08 \
+            org.electronjs.Electron2.BaseApp//24.08
+
+      # The build sandbox has no network, so every npm tarball and the Electron
+      # binary have to be declared as sources up front. See flatpak/README.md.
+      - name: Generate offline npm sources
+        run: |
+          python3 -m venv .venv
+          .venv/bin/pip install --quiet aiohttp requirements-parser PyYAML
+          curl -sSfLO https://raw.githubusercontent.com/flatpak/flatpak-builder-tools/master/node/flatpak-node-generator.py
+          .venv/bin/python flatpak-node-generator.py npm package-lock.json -o flatpak/generated-sources.json
+
+      # The committed manifest builds a published tag, which is what Flathub
+      # needs but would make CI test the last release instead of this commit.
+      # Swap that one source for the checked-out tree.
+      - name: Point the manifest at the checked-out tree
+        run: |
+          .venv/bin/python - <<'PY'
+          import yaml, os
+          path = os.environ['MANIFEST']
+          with open(path) as f:
+              manifest = yaml.safe_load(f)
+          sources = manifest['modules'][0]['sources']
+          sources[:] = [
+              {'type': 'dir', 'path': '..', 'skip': ['.git', '.venv', 'node_modules', 'dist', 'build-dir']}
+              if isinstance(s, dict) and s.get('type') == 'git' else s
+              for s in sources
+          ]
+          with open(path, 'w') as f:
+              yaml.safe_dump(manifest, f, sort_keys=False)
+          PY
+          cat "$MANIFEST"
+
+      - name: Cache build downloads
+        uses: actions/cache@v4
+        with:
+          path: .flatpak-builder/downloads
+          key: flatpak-downloads-${{ hashFiles('package-lock.json') }}
+          restore-keys: flatpak-downloads-
+
+      - name: Build
+        run: |
+          flatpak-builder --user --force-clean --disable-rofiles-fuse \
+            --repo=repo build-dir "$MANIFEST"
+
+      - name: Bundle
+        run: |
+          flatpak build-bundle repo slacky.flatpak "$APP_ID" --runtime-repo=https://dl.flathub.org/repo/flathub.flatpakrepo
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: slacky-flatpak-arm64
+          path: slacky.flatpak
+          if-no-files-found: error

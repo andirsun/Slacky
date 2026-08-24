@@ -44,6 +44,19 @@ python3 flatpak-node-generator.py npm package-lock.json -o flatpak/generated-sou
 The generator also emits `flatpak-node/electron-builder-arch-args.sh`, which the
 manifest sources so electron-builder targets the architecture being built.
 
+## CI
+
+`.github/workflows/flatpak.yml` builds this manifest on `ubuntu-24.04-arm` for
+every pull request that touches the app or the packaging, and uploads the
+resulting `slacky.flatpak` as a run artifact you can install with
+`flatpak install --user slacky.flatpak`. A separate job validates the AppStream
+and desktop metadata.
+
+CI generates `generated-sources.json` itself, and rewrites the manifest's `git`
+source to a `dir` source so it builds the commit under test rather than the last
+published tag. The committed manifest keeps the `git` source, which is what
+Flathub requires.
+
 ## Building and running locally
 
 ```sh
