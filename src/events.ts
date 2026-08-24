@@ -1,3 +1,3 @@
 export enum SlackyEvent {
-  NotificationClicked = 'slacky:notification-clicked',
+  NotificationClicked = 'slacky:notification-clicked'
 }
