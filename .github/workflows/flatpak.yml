@@ -28,8 +28,27 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends appstream desktop-file-utils
 
+      # --no-net keeps this to structural validation. The screenshot URL is
+      # checked separately below, because it is a Flathub submission
+      # requirement rather than something that blocks a build.
       - name: Validate AppStream metainfo
-        run: appstreamcli validate --explain flatpak/${{ env.APP_ID }}.metainfo.xml
+        run: appstreamcli validate --explain --no-net flatpak/${{ env.APP_ID }}.metainfo.xml
+
+      - name: Check screenshots resolve
+        run: |
+          urls=$(grep -oP '(?<=<image>)[^<]+' flatpak/${{ env.APP_ID }}.metainfo.xml)
+          missing=0
+          for url in $urls; do
+            if curl -sSfLI --max-time 30 "$url" >/dev/null 2>&1; then
+              echo "ok  $url"
+            else
+              echo "::warning file=flatpak/${{ env.APP_ID }}.metainfo.xml::Screenshot $url does not resolve. Flathub rejects submissions with unreachable screenshots."
+              missing=1
+            fi
+          done
+          if [ "$missing" = 1 ]; then
+            echo "Screenshots are still outstanding; see the checklist in flatpak/README.md."
+          fi
 
       - name: Validate desktop entry
         run: desktop-file-validate flatpak/${{ env.APP_ID }}.desktop
@@ -60,9 +79,9 @@ jobs:
       - name: Generate offline npm sources
         run: |
           python3 -m venv .venv
-          .venv/bin/pip install --quiet aiohttp requirements-parser PyYAML
-          curl -sSfLO https://raw.githubusercontent.com/flatpak/flatpak-builder-tools/master/node/flatpak-node-generator.py
-          .venv/bin/python flatpak-node-generator.py npm package-lock.json -o flatpak/generated-sources.json
+          .venv/bin/pip install --quiet PyYAML \
+            'flatpak-node-generator @ git+https://github.com/flatpak/flatpak-builder-tools.git#subdirectory=node'
+          .venv/bin/flatpak-node-generator npm package-lock.json -o flatpak/generated-sources.json
 
       # The committed manifest builds a published tag, which is what Flathub
       # needs but would make CI test the last release instead of this commit.

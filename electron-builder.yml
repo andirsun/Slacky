@@ -17,6 +17,9 @@ protocols:
 linux:
   category: Network
   synopsis: Slack client for Linux arm64 systems
+  # Pinned so the binary inside the unpacked build has a predictable name; the
+  # flatpak wrapper in flatpak/slacky.sh execs /app/main/slacky.
+  executableName: slacky
   target:
     - target: AppImage
       arch:
