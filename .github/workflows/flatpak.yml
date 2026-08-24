@@ -21,7 +21,7 @@ jobs:
     name: Validate metadata
     runs-on: ubuntu-24.04-arm
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Install validators
         run: |
@@ -58,17 +58,34 @@ jobs:
     runs-on: ubuntu-24.04-arm
     timeout-minutes: 90
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Install flatpak-builder
         run: |
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends flatpak flatpak-builder
-          flatpak remote-add --user --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo
+
+      # ~1.5 GB of runtimes, and dl.flathub.org times out often enough to
+      # matter. Exact key only: a half-restored ostree repo is worse than none,
+      # and the install step below repairs anything the cache got wrong.
+      - name: Cache flatpak runtimes
+        uses: actions/cache@v6
+        with:
+          path: ~/.local/share/flatpak
+          key: flatpak-runtimes-24.08-node22-electron2
 
       - name: Install runtimes
         run: |
-          flatpak install --user -y --noninteractive flathub \
+          retry() {
+            for attempt in 1 2 3; do
+              "$@" && return 0
+              echo "::warning::flathub attempt $attempt failed, retrying in 30s"
+              sleep 30
+            done
+            return 1
+          }
+          retry flatpak remote-add --user --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo
+          retry flatpak install --user -y --noninteractive flathub \
             org.freedesktop.Platform//24.08 \
             org.freedesktop.Sdk//24.08 \
             org.freedesktop.Sdk.Extension.node22//24.08 \
@@ -105,7 +122,7 @@ jobs:
           cat "$MANIFEST"
 
       - name: Cache build downloads
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: .flatpak-builder/downloads
           key: flatpak-downloads-${{ hashFiles('package-lock.json') }}
@@ -120,7 +137,7 @@ jobs:
         run: |
           flatpak build-bundle repo slacky.flatpak "$APP_ID" --runtime-repo=https://dl.flathub.org/repo/flathub.flatpakrepo
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: slacky-flatpak-arm64
           path: slacky.flatpak
