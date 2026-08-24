@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop-application">
+  <id>com.andersonlaverde.slacky</id>
+
+  <name>Slacky</name>
+  <summary>Slack client for Linux arm64 systems</summary>
+
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>MIT</project_license>
+
+  <developer id="com.andersonlaverde">
+    <name>Anderson Laverde</name>
+  </developer>
+
+  <description>
+    <p>
+      Slacky is a desktop Slack client for Linux machines running on arm64
+      hardware, where the official Slack desktop app is not available. It wraps
+      the Slack web client in a native window so it behaves like a normal
+      desktop application.
+    </p>
+    <p>Features:</p>
+    <ul>
+      <li>Sign in to several Slack workspaces and switch between them</li>
+      <li>Desktop notifications that focus the window when clicked</li>
+      <li>Huddles, including pop-out huddle windows</li>
+      <li>Google single sign-on completed inside the app</li>
+      <li>slack:// deep links open in Slacky rather than a browser</li>
+    </ul>
+  </description>
+
+  <launchable type="desktop-id">com.andersonlaverde.slacky.desktop</launchable>
+
+  <!--
+    TODO before submitting to Flathub: this screenshot URL has to resolve to a
+    real image. Flathub's review will reject the submission otherwise. Add a
+    PNG at the path below on the main branch, or point these at wherever the
+    screenshots end up living.
+  -->
+  <screenshots>
+    <screenshot type="default">
+      <image>https://raw.githubusercontent.com/andirsun/Slacky/main/build/screenshots/main-window.png</image>
+      <caption>The Slack workspace running in Slacky</caption>
+    </screenshot>
+  </screenshots>
+
+  <url type="homepage">https://github.com/andirsun/Slacky</url>
+  <url type="bugtracker">https://github.com/andirsun/Slacky/issues</url>
+  <url type="vcs-browser">https://github.com/andirsun/Slacky</url>
+
+  <!--
+    Slacky is a client for a third-party chat service, so users can exchange
+    arbitrary messages through it.
+  -->
+  <content_rating type="oars-1.1">
+    <content_attribute id="social-chat">intense</content_attribute>
+    <content_attribute id="social-audio">intense</content_attribute>
+  </content_rating>
+
+  <releases>
+    <release version="1.0.0" date="2026-08-24">
+      <description>
+        <p>
+          First stable release: multiple workspaces, native huddle pop-out
+          windows, in-app Google SSO, window focus on notification click, and
+          arm64 AppImage, deb and rpm packages.
+        </p>
+      </description>
+      <url>https://github.com/andirsun/Slacky/releases/tag/v1.0.0</url>
+    </release>
+  </releases>
+</component>
