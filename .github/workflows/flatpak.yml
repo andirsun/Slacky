@@ -76,11 +76,16 @@ jobs:
 
       - name: Install runtimes
         run: |
+          # dl.flathub.org has served truncated objects and 503s for the Node
+          # SDK extension. Back off far enough to ride out a bad spell rather
+          # than hammering a CDN that is already unwell.
           retry() {
-            for attempt in 1 2 3; do
+            delay=30
+            for attempt in 1 2 3 4 5; do
               "$@" && return 0
-              echo "::warning::flathub attempt $attempt failed, retrying in 30s"
-              sleep 30
+              echo "::warning::flathub attempt $attempt failed, retrying in ${delay}s"
+              sleep $delay
+              delay=$((delay * 2))
             done
             return 1
           }
