@@ -60,6 +60,36 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
+      # The build sandbox has no network, so every npm tarball and the Electron
+      # binary have to be declared as sources up front. See flatpak/README.md.
+      - name: Generate offline npm sources
+        run: |
+          python3 -m venv .venv
+          .venv/bin/pip install --quiet PyYAML \
+            'flatpak-node-generator @ git+https://github.com/flatpak/flatpak-builder-tools.git#subdirectory=node'
+          .venv/bin/flatpak-node-generator npm package-lock.json -o flatpak/generated-sources.json
+
+      # The committed manifest builds a published tag, which is what Flathub
+      # needs but would make CI test the last release instead of this commit.
+      # Swap that one source for the checked-out tree.
+      - name: Point the manifest at the checked-out tree
+        run: |
+          .venv/bin/python - <<'PY'
+          import yaml, os
+          path = os.environ['MANIFEST']
+          with open(path) as f:
+              manifest = yaml.safe_load(f)
+          sources = manifest['modules'][0]['sources']
+          sources[:] = [
+              {'type': 'dir', 'path': '..', 'skip': ['.git', '.venv', 'node_modules', 'dist', 'build-dir']}
+              if isinstance(s, dict) and s.get('type') == 'git' else s
+              for s in sources
+          ]
+          with open(path, 'w') as f:
+              yaml.safe_dump(manifest, f, sort_keys=False)
+          PY
+          cat "$MANIFEST"
+
       - name: Install flatpak-builder
         run: |
           sudo apt-get update
@@ -95,36 +125,6 @@ jobs:
             org.freedesktop.Sdk//24.08 \
             org.freedesktop.Sdk.Extension.node24//24.08 \
             org.electronjs.Electron2.BaseApp//24.08
-
-      # The build sandbox has no network, so every npm tarball and the Electron
-      # binary have to be declared as sources up front. See flatpak/README.md.
-      - name: Generate offline npm sources
-        run: |
-          python3 -m venv .venv
-          .venv/bin/pip install --quiet PyYAML \
-            'flatpak-node-generator @ git+https://github.com/flatpak/flatpak-builder-tools.git#subdirectory=node'
-          .venv/bin/flatpak-node-generator npm package-lock.json -o flatpak/generated-sources.json
-
-      # The committed manifest builds a published tag, which is what Flathub
-      # needs but would make CI test the last release instead of this commit.
-      # Swap that one source for the checked-out tree.
-      - name: Point the manifest at the checked-out tree
-        run: |
-          .venv/bin/python - <<'PY'
-          import yaml, os
-          path = os.environ['MANIFEST']
-          with open(path) as f:
-              manifest = yaml.safe_load(f)
-          sources = manifest['modules'][0]['sources']
-          sources[:] = [
-              {'type': 'dir', 'path': '..', 'skip': ['.git', '.venv', 'node_modules', 'dist', 'build-dir']}
-              if isinstance(s, dict) and s.get('type') == 'git' else s
-              for s in sources
-          ]
-          with open(path, 'w') as f:
-              yaml.safe_dump(manifest, f, sort_keys=False)
-          PY
-          cat "$MANIFEST"
 
       - name: Cache build downloads
         uses: actions/cache@v6
