@@ -94,7 +94,7 @@ export default class Main {
       roundedCorners: true,
       width: 1920,
       height: 1080,
-      title: 'Slack ARM',
+      title: 'Slacky',
       autoHideMenuBar: true,
       center: true,
       webPreferences: {
