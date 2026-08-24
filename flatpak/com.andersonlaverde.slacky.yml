@@ -8,7 +8,7 @@ command: slacky
 separate-locales: false
 
 sdk-extensions:
-  - org.freedesktop.Sdk.Extension.node22
+  - org.freedesktop.Sdk.Extension.node24
 
 finish-args:
   # Electron's zygote/renderer processes talk to each other over the X11 and
@@ -39,7 +39,7 @@ modules:
   - name: slacky
     buildsystem: simple
     build-options:
-      append-path: /usr/lib/sdk/node22/bin
+      append-path: /usr/lib/sdk/node24/bin
       env:
         # The build sandbox has no network. Both caches are pre-populated by
         # the sources in generated-sources.json; electron-builder finds the

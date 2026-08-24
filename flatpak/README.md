@@ -25,7 +25,7 @@ package you need arm64 hardware or `qemu-user-static` binfmt emulation.
 
 ```sh
 flatpak install -y flathub org.freedesktop.Platform//24.08 org.freedesktop.Sdk//24.08 \
-    org.freedesktop.Sdk.Extension.node22//24.08 org.electronjs.Electron2.BaseApp//24.08
+    org.freedesktop.Sdk.Extension.node24//24.08 org.electronjs.Electron2.BaseApp//24.08
 ```
 
 ## Generating `generated-sources.json`
