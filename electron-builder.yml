@@ -16,7 +16,7 @@ protocols:
       - slack
 linux:
   category: Network
-  synopsis: SlackArm
+  synopsis: Slack client for Linux arm64 systems
   target:
     - target: AppImage
       arch:
