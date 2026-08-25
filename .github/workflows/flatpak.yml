@@ -110,14 +110,18 @@ jobs:
           # SDK extension. Back off far enough to ride out a bad spell rather
           # than hammering a CDN that is already unwell.
           retry() {
+            attempts=4
             delay=30
-            for attempt in 1 2 3 4 5; do
+            for attempt in $(seq $attempts); do
               "$@" && return 0
+              if [ "$attempt" -eq "$attempts" ]; then
+                echo "::error::flathub failed $attempts times, giving up"
+                return 1
+              fi
               echo "::warning::flathub attempt $attempt failed, retrying in ${delay}s"
               sleep $delay
               delay=$((delay * 2))
             done
-            return 1
           }
           retry flatpak remote-add --user --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo
           retry flatpak install --user -y --noninteractive flathub \
