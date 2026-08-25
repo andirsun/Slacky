@@ -25,8 +25,18 @@ package you need arm64 hardware or `qemu-user-static` binfmt emulation.
 
 ```sh
 flatpak install -y flathub org.freedesktop.Platform//24.08 org.freedesktop.Sdk//24.08 \
-    org.freedesktop.Sdk.Extension.node24//24.08 org.electronjs.Electron2.BaseApp//24.08
+    org.electronjs.Electron2.BaseApp//24.08
 ```
+
+## Node comes from nodejs.org, temporarily
+
+This manifest would normally build against
+`org.freedesktop.Sdk.Extension.node24`. dl.flathub.org is currently serving
+that extension's `aarch64/24.08` objects broken — HTTP 503, or a 22,509,726
+byte object truncated at exactly 3 MiB — so the manifest vendors Node from
+nodejs.org as a build-only module instead, and drops it from the finished
+flatpak with `cleanup`. Switch back to the SDK extension once upstream is
+fixed; that is what Flathub reviewers expect to see.
 
 ## Generating `generated-sources.json`
 
@@ -36,9 +46,8 @@ hand, and is not committed — regenerate it whenever `package-lock.json` change
 
 ```sh
 # Needs network. Run from the repo root.
-pip install --user requirements-parser  # dependency of the generator
-curl -LO https://raw.githubusercontent.com/flatpak/flatpak-builder-tools/master/node/flatpak-node-generator.py
-python3 flatpak-node-generator.py npm package-lock.json -o flatpak/generated-sources.json
+pipx install 'git+https://github.com/flatpak/flatpak-builder-tools.git#subdirectory=node'
+flatpak-node-generator npm package-lock.json -o flatpak/generated-sources.json
 ```
 
 The generator also emits `flatpak-node/electron-builder-arch-args.sh`, which the

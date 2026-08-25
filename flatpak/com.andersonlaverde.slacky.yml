@@ -7,9 +7,6 @@ base-version: '24.08'
 command: slacky
 separate-locales: false
 
-sdk-extensions:
-  - org.freedesktop.Sdk.Extension.node24
-
 finish-args:
   # Electron's zygote/renderer processes talk to each other over the X11 and
   # IPC sockets; without --share=ipc it falls back to slow shared memory.
@@ -36,10 +33,31 @@ finish-args:
   - --filesystem=xdg-pictures:ro
 
 modules:
+  # TEMPORARY: this should be `sdk-extensions: [org.freedesktop.Sdk.Extension.node24]`
+  # with `append-path: /usr/lib/sdk/node24/bin` on the module below.
+  # dl.flathub.org is serving that extension's aarch64/24.08 objects broken
+  # (HTTP 503, or a 22 MB object truncated at exactly 3 MiB), so Node comes
+  # from nodejs.org instead. Revert to the SDK extension once that is fixed.
+  #
+  # `cleanup: ['*']` drops everything this module installs from the finished
+  # flatpak: Node is needed to build, not to run.
+  - name: node
+    buildsystem: simple
+    cleanup:
+      - '*'
+    build-commands:
+      - cp -a bin include lib share /app/
+    sources:
+      - type: archive
+        url: https://nodejs.org/dist/v24.19.0/node-v24.19.0-linux-arm64.tar.xz
+        sha256: 01443c1e1a29e531ccad5a46fefa6df490d2189c49f7955904aecdbb0fe86fdc
+        only-arches:
+          - aarch64
+
   - name: slacky
     buildsystem: simple
     build-options:
-      append-path: /usr/lib/sdk/node24/bin
+      append-path: /app/bin
       env:
         # The build sandbox has no network. Both caches are pre-populated by
         # the sources in generated-sources.json; electron-builder finds the
