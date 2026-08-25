@@ -1,0 +1,116 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Choose what to share</title>
+    <style>
+      body {
+        font-family: system-ui, sans-serif;
+        margin: 0;
+        padding: 20px;
+        background: #1a1d21;
+        color: #e8e8e8;
+      }
+      h1 {
+        font-size: 18px;
+        margin: 0 0 16px;
+      }
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+        gap: 12px;
+      }
+      .source {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        padding: 8px;
+        background: #222529;
+        border: 2px solid transparent;
+        border-radius: 8px;
+        cursor: pointer;
+        color: inherit;
+        text-align: left;
+        font: inherit;
+      }
+      .source:hover,
+      .source:focus-visible {
+        border-color: #1264a3;
+        background: #2a2e33;
+        outline: none;
+      }
+      .source img {
+        width: 100%;
+        height: 124px;
+        object-fit: cover;
+        background: #000;
+        border-radius: 4px;
+      }
+      .source span {
+        font-size: 13px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .empty {
+        font-size: 14px;
+        color: #9aa0a6;
+      }
+      .actions {
+        margin-top: 20px;
+        text-align: right;
+      }
+      #cancel {
+        padding: 8px 18px;
+        font-size: 14px;
+        border-radius: 6px;
+        border: 1px solid #4a4f55;
+        background: transparent;
+        color: inherit;
+        cursor: pointer;
+      }
+      #cancel:hover {
+        background: #2a2e33;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Choose what to share</h1>
+    <div class="grid" id="grid"></div>
+    <div class="actions"><button id="cancel">Cancel</button></div>
+    <script>
+      // `window.slackyScreenShare` is exposed by preload.ts in this directory.
+      const cancel = () => window.slackyScreenShare.select(null);
+
+      const render = (sources) => {
+        const grid = document.getElementById("grid");
+        if (sources.length === 0) {
+          grid.className = "empty";
+          grid.textContent = "No screens or windows are available to share.";
+          return;
+        }
+        for (const source of sources) {
+          const card = document.createElement("button");
+          card.className = "source";
+          const thumbnail = document.createElement("img");
+          thumbnail.src = source.thumbnail;
+          thumbnail.alt = "";
+          const label = document.createElement("span");
+          // textContent, not innerHTML: window titles are attacker-influenced.
+          label.textContent = source.name;
+          label.title = source.name;
+          card.append(thumbnail, label);
+          card.addEventListener("click", () => window.slackyScreenShare.select(source.id));
+          grid.append(card);
+        }
+        grid.firstElementChild.focus();
+      };
+
+      window.slackyScreenShare.getSources().then(render).catch(cancel);
+      document.getElementById("cancel").addEventListener("click", cancel);
+      document.addEventListener("keydown", (event) => {
+        if (event.key === "Escape") cancel();
+      });
+    </script>
+  </body>
+</html>
