@@ -1,5 +1,5 @@
 import { contextBridge, ipcRenderer } from 'electron'
-import { SlackyEvent } from './events'
+import { SlackyEvent } from '../events'
 
 /** One capturable screen or window, as rendered by the picker. */
 export interface ScreenShareSource {
@@ -10,10 +10,10 @@ export interface ScreenShareSource {
 }
 
 /**
- * Bridge for the screen-share picker window. The source list is pulled over
- * IPC after the window is up instead of being baked into its markup, which
- * kept the picker's own URL small enough for Chromium to load. See the note on
- * SCREEN_SHARE_PICKER_HTML in main.ts.
+ * Bridge for the screen-share picker window (picker.html). The source list is
+ * pulled over IPC after the window is up rather than being baked into the page,
+ * so the picker stays a fixed-size static asset no matter how many windows are
+ * open — see the note in picker.ts.
  */
 contextBridge.exposeInMainWorld('slackyScreenShare', {
   getSources: (): Promise<ScreenShareSource[]> =>
