@@ -93,7 +93,7 @@ jobs:
       - name: Install flatpak-builder
         run: |
           sudo apt-get update
-          sudo apt-get install -y --no-install-recommends flatpak flatpak-builder
+          sudo apt-get install -y --no-install-recommends flatpak flatpak-builder elfutils
 
       # ~1.5 GB of runtimes, and dl.flathub.org times out often enough to
       # matter. Exact key only: a half-restored ostree repo is worse than none,

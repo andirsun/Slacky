@@ -45,6 +45,11 @@ modules:
     buildsystem: simple
     cleanup:
       - '*'
+    build-options:
+      # Node ships prebuilt and this module is discarded anyway, so there is
+      # nothing worth extracting debuginfo from.
+      no-debuginfo: true
+      strip: false
     build-commands:
       - cp -a bin include lib share /app/
     sources:
@@ -58,6 +63,9 @@ modules:
     buildsystem: simple
     build-options:
       append-path: /app/bin
+      # Electron's binaries are prebuilt and already stripped; extracting
+      # debuginfo from them yields nothing and costs minutes.
+      no-debuginfo: true
       env:
         # The build sandbox has no network. Both caches are pre-populated by
         # the sources in generated-sources.json; electron-builder finds the
