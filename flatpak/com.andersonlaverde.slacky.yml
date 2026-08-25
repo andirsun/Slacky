@@ -7,6 +7,9 @@ base-version: '24.08'
 command: slacky
 separate-locales: false
 
+sdk-extensions:
+  - org.freedesktop.Sdk.Extension.node24
+
 finish-args:
   # Electron's zygote/renderer processes talk to each other over the X11 and
   # IPC sockets; without --share=ipc it falls back to slow shared memory.
@@ -33,36 +36,10 @@ finish-args:
   - --filesystem=xdg-pictures:ro
 
 modules:
-  # TEMPORARY: this should be `sdk-extensions: [org.freedesktop.Sdk.Extension.node24]`
-  # with `append-path: /usr/lib/sdk/node24/bin` on the module below.
-  # dl.flathub.org is serving that extension's aarch64/24.08 objects broken
-  # (HTTP 503, or a 22 MB object truncated at exactly 3 MiB), so Node comes
-  # from nodejs.org instead. Revert to the SDK extension once that is fixed.
-  #
-  # `cleanup: ['*']` drops everything this module installs from the finished
-  # flatpak: Node is needed to build, not to run.
-  - name: node
-    buildsystem: simple
-    cleanup:
-      - '*'
-    build-options:
-      # Node ships prebuilt and this module is discarded anyway, so there is
-      # nothing worth extracting debuginfo from.
-      no-debuginfo: true
-      strip: false
-    build-commands:
-      - cp -a bin include lib share /app/
-    sources:
-      - type: archive
-        url: https://nodejs.org/dist/v24.19.0/node-v24.19.0-linux-arm64.tar.xz
-        sha256: 01443c1e1a29e531ccad5a46fefa6df490d2189c49f7955904aecdbb0fe86fdc
-        only-arches:
-          - aarch64
-
   - name: slacky
     buildsystem: simple
     build-options:
-      append-path: /app/bin
+      append-path: /usr/lib/sdk/node24/bin
       # Electron's binaries are prebuilt and already stripped; extracting
       # debuginfo from them yields nothing and costs minutes.
       no-debuginfo: true
@@ -94,6 +71,10 @@ modules:
       - . flatpak-node/electron-builder-arch-args.sh; ./node_modules/.bin/electron-builder --linux dir --config.electronDist=electron-dist $ELECTRON_BUILDER_ARCH_ARGS
       - mkdir -p /app/main
       - cp -a dist/packages/linux*unpacked/. /app/main/
+      # electron-builder renames the Electron binary to executableName. If that
+      # ever drifts, the wrapper would exec a missing path and the app would
+      # fail only at launch, so fail here instead.
+      - test -x /app/main/slacky
       # zypak lets Electron's sandbox work inside flatpak's own sandbox.
       - install -Dm755 flatpak/slacky.sh /app/bin/slacky
       - install -Dm644 build/icons/icon.png /app/share/icons/hicolor/512x512/apps/com.andersonlaverde.slacky.png

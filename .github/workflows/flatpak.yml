@@ -112,7 +112,7 @@ jobs:
         uses: actions/cache@v6
         with:
           path: ~/.local/share/flatpak
-          key: flatpak-runtimes-24.08-electron2
+          key: flatpak-runtimes-24.08-node24-electron2
 
       - name: Install runtimes
         run: |
@@ -134,12 +134,10 @@ jobs:
             done
           }
           retry flatpak remote-add --user --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo
-          # The Node SDK extension is deliberately absent: the manifest vendors
-          # Node from nodejs.org while dl.flathub.org serves that extension
-          # broken. See the comment in the manifest.
           retry flatpak install --user -y --noninteractive flathub \
             org.freedesktop.Platform//24.08 \
             org.freedesktop.Sdk//24.08 \
+            org.freedesktop.Sdk.Extension.node24//24.08 \
             org.electronjs.Electron2.BaseApp//24.08
 
       - name: Cache build downloads

@@ -10,6 +10,19 @@ Files here build Slacky as a flatpak and prepare the Flathub submission for
 | `com.andersonlaverde.slacky.desktop` | Desktop entry |
 | `slacky.sh` | Launcher, wraps the app in zypak |
 
+## Two things that are not obvious
+
+`electronDist` is passed explicitly because flatpak-node-generator writes the
+Electron zip flat into `$XDG_CACHE_HOME/electron`, while `@electron/get` looks
+for it under a `sha256`-of-the-URL subdirectory. The cached zip is therefore
+invisible to electron-builder, which then tries to reach github.com and fails
+in the network-less build sandbox. Unpacking it and passing `electronDist`
+sidesteps the cache layout entirely.
+
+`npm ci`, not `npm install`: install re-resolves the dependency tree and
+reaches for packages outside the lockfile, which are by definition absent from
+the generated offline sources (`ENOTCACHED`).
+
 ## Why this does not use electron-builder's flatpak target
 
 electron-builder's `flatpak` target shells out to `flatpak-builder` itself. The
@@ -25,18 +38,8 @@ package you need arm64 hardware or `qemu-user-static` binfmt emulation.
 
 ```sh
 flatpak install -y flathub org.freedesktop.Platform//24.08 org.freedesktop.Sdk//24.08 \
-    org.electronjs.Electron2.BaseApp//24.08
+    org.freedesktop.Sdk.Extension.node24//24.08 org.electronjs.Electron2.BaseApp//24.08
 ```
-
-## Node comes from nodejs.org, temporarily
-
-This manifest would normally build against
-`org.freedesktop.Sdk.Extension.node24`. dl.flathub.org is currently serving
-that extension's `aarch64/24.08` objects broken — HTTP 503, or a 22,509,726
-byte object truncated at exactly 3 MiB — so the manifest vendors Node from
-nodejs.org as a build-only module instead, and drops it from the finished
-flatpak with `cleanup`. Switch back to the SDK extension once upstream is
-fixed; that is what Flathub reviewers expect to see.
 
 ## Generating `generated-sources.json`
 
