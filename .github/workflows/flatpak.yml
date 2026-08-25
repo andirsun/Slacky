@@ -75,16 +75,26 @@ jobs:
       - name: Point the manifest at the checked-out tree
         run: |
           .venv/bin/python - <<'PY'
-          import yaml, os
+          import sys, os, yaml
           path = os.environ['MANIFEST']
           with open(path) as f:
               manifest = yaml.safe_load(f)
-          sources = manifest['modules'][0]['sources']
-          sources[:] = [
-              {'type': 'dir', 'path': '..', 'skip': ['.git', '.venv', 'node_modules', 'dist', 'build-dir']}
-              if isinstance(s, dict) and s.get('type') == 'git' else s
-              for s in sources
-          ]
+          local = {'type': 'dir', 'path': '..',
+                   'skip': ['.git', '.venv', 'node_modules', 'dist', 'build-dir']}
+          swapped = 0
+          # Every module, not a hardcoded index: the app module is not
+          # necessarily first, and silently rewriting the wrong one means CI
+          # builds the last release instead of the commit under test.
+          for module in manifest['modules']:
+              sources = module.get('sources')
+              if not sources:
+                  continue
+              for i, source in enumerate(sources):
+                  if isinstance(source, dict) and source.get('type') == 'git':
+                      sources[i] = local
+                      swapped += 1
+          if swapped != 1:
+              sys.exit(f'expected exactly one git source to swap, found {swapped}')
           with open(path, 'w') as f:
               yaml.safe_dump(manifest, f, sort_keys=False)
           PY

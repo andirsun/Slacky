@@ -74,7 +74,10 @@ modules:
         XDG_CACHE_HOME: /run/build/slacky/flatpak-node/cache
         npm_config_cache: /run/build/slacky/flatpak-node/npm-cache
     build-commands:
-      - npm install --offline
+      # `npm ci`, not `npm install`: install re-resolves the tree and reached
+      # for a chokidar that is not in the lockfile, so not in the offline
+      # sources either. ci installs the lockfile exactly.
+      - npm ci --offline
       - npm run build
       # `--linux dir` produces an unpacked tree and nothing else. Do NOT use
       # electron-builder's own `flatpak` target here: it shells out to
