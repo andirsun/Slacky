@@ -1,0 +1,163 @@
+name: Flatpak
+
+on:
+  push:
+    branches: [main]
+    paths: ['flatpak/**', 'src/**', 'package.json', 'package-lock.json', 'electron-builder.yml', '.github/workflows/flatpak.yml']
+  pull_request:
+    paths: ['flatpak/**', 'src/**', 'package.json', 'package-lock.json', 'electron-builder.yml', '.github/workflows/flatpak.yml']
+  workflow_dispatch:
+
+concurrency:
+  group: flatpak-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  MANIFEST: flatpak/com.andersonlaverde.slacky.yml
+  APP_ID: com.andersonlaverde.slacky
+
+jobs:
+  metadata:
+    name: Validate metadata
+    runs-on: ubuntu-24.04-arm
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Install validators
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends appstream desktop-file-utils
+
+      # --no-net keeps this to structural validation. The screenshot URL is
+      # checked separately below, because it is a Flathub submission
+      # requirement rather than something that blocks a build.
+      - name: Validate AppStream metainfo
+        run: appstreamcli validate --explain --no-net flatpak/${{ env.APP_ID }}.metainfo.xml
+
+      - name: Check screenshots resolve
+        run: |
+          urls=$(grep -oP '(?<=<image>)[^<]+' flatpak/${{ env.APP_ID }}.metainfo.xml)
+          missing=0
+          for url in $urls; do
+            if curl -sSfLI --max-time 30 "$url" >/dev/null 2>&1; then
+              echo "ok  $url"
+            else
+              echo "::warning file=flatpak/${{ env.APP_ID }}.metainfo.xml::Screenshot $url does not resolve. Flathub rejects submissions with unreachable screenshots."
+              missing=1
+            fi
+          done
+          if [ "$missing" = 1 ]; then
+            echo "Screenshots are still outstanding; see the checklist in flatpak/README.md."
+          fi
+
+      - name: Validate desktop entry
+        run: desktop-file-validate flatpak/${{ env.APP_ID }}.desktop
+
+  build:
+    name: Build flatpak (arm64)
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v7
+
+      # The build sandbox has no network, so every npm tarball and the Electron
+      # binary have to be declared as sources up front. See flatpak/README.md.
+      - name: Generate offline npm sources
+        run: |
+          python3 -m venv .venv
+          .venv/bin/pip install --quiet PyYAML \
+            'flatpak-node-generator @ git+https://github.com/flatpak/flatpak-builder-tools.git#subdirectory=node'
+          .venv/bin/flatpak-node-generator npm package-lock.json -o flatpak/generated-sources.json
+
+      # The committed manifest builds a published tag, which is what Flathub
+      # needs but would make CI test the last release instead of this commit.
+      # Swap that one source for the checked-out tree.
+      - name: Point the manifest at the checked-out tree
+        run: |
+          .venv/bin/python - <<'PY'
+          import sys, os, yaml
+          path = os.environ['MANIFEST']
+          with open(path) as f:
+              manifest = yaml.safe_load(f)
+          local = {'type': 'dir', 'path': '..',
+                   'skip': ['.git', '.venv', 'node_modules', 'dist', 'build-dir']}
+          swapped = 0
+          # Every module, not a hardcoded index: the app module is not
+          # necessarily first, and silently rewriting the wrong one means CI
+          # builds the last release instead of the commit under test.
+          for module in manifest['modules']:
+              sources = module.get('sources')
+              if not sources:
+                  continue
+              for i, source in enumerate(sources):
+                  if isinstance(source, dict) and source.get('type') == 'git':
+                      sources[i] = local
+                      swapped += 1
+          if swapped != 1:
+              sys.exit(f'expected exactly one git source to swap, found {swapped}')
+          with open(path, 'w') as f:
+              yaml.safe_dump(manifest, f, sort_keys=False)
+          PY
+          cat "$MANIFEST"
+
+      - name: Install flatpak-builder
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends flatpak flatpak-builder elfutils
+
+      # ~1.5 GB of runtimes, and dl.flathub.org times out often enough to
+      # matter. Exact key only: a half-restored ostree repo is worse than none,
+      # and the install step below repairs anything the cache got wrong.
+      - name: Cache flatpak runtimes
+        uses: actions/cache@v6
+        with:
+          path: ~/.local/share/flatpak
+          key: flatpak-runtimes-24.08-node24-electron2
+
+      - name: Install runtimes
+        run: |
+          # dl.flathub.org has served truncated objects and 503s for the Node
+          # SDK extension. Back off far enough to ride out a bad spell rather
+          # than hammering a CDN that is already unwell.
+          retry() {
+            attempts=4
+            delay=30
+            for attempt in $(seq $attempts); do
+              "$@" && return 0
+              if [ "$attempt" -eq "$attempts" ]; then
+                echo "::error::flathub failed $attempts times, giving up"
+                return 1
+              fi
+              echo "::warning::flathub attempt $attempt failed, retrying in ${delay}s"
+              sleep $delay
+              delay=$((delay * 2))
+            done
+          }
+          retry flatpak remote-add --user --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo
+          retry flatpak install --user -y --noninteractive flathub \
+            org.freedesktop.Platform//24.08 \
+            org.freedesktop.Sdk//24.08 \
+            org.freedesktop.Sdk.Extension.node24//24.08 \
+            org.electronjs.Electron2.BaseApp//24.08
+
+      - name: Cache build downloads
+        uses: actions/cache@v6
+        with:
+          path: .flatpak-builder/downloads
+          key: flatpak-downloads-${{ hashFiles('package-lock.json') }}
+          restore-keys: flatpak-downloads-
+
+      - name: Build
+        run: |
+          flatpak-builder --user --force-clean --disable-rofiles-fuse \
+            --repo=repo build-dir "$MANIFEST"
+
+      - name: Bundle
+        run: |
+          flatpak build-bundle repo slacky.flatpak "$APP_ID" --runtime-repo=https://dl.flathub.org/repo/flathub.flatpakrepo
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: slacky-flatpak-arm64
+          path: slacky.flatpak
+          if-no-files-found: error
