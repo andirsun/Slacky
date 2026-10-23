@@ -1,5 +1,9 @@
 import { ipcRenderer } from 'electron'
 import { SlackyEvent } from './events'
+import { enableMultiWorkspace } from './multi-workspace'
+
+// Must run before Slack's boot scripts read their local config.
+enableMultiWorkspace()
 
 /**
  * Slack's web client raises desktop notifications through the HTML5
