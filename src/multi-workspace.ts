@@ -13,7 +13,13 @@
  * desktop "Slack/x.y" user agent makes the client wait for the official app's
  * IPC bridge and fail to load).
  *
- * Only an unset value is touched, so an explicit `false` is respected.
+ * The rail itself is a collapsible panel whose state Slack keeps in
+ * `localConfig_v2.viewLayoutIsWorkspaceSwitcherVisible`; unset means hidden, so
+ * on a fresh profile the rail would start collapsed. It is defaulted to visible
+ * so every signed-in workspace is in view from the first launch.
+ *
+ * Only unset values are touched, so an explicit `false` is respected for both:
+ * hiding the rail (Ctrl+Shift+S) sticks, and multi-team mode can be opted out of.
  */
 const LOCAL_CONFIG_KEY = 'localConfig_v2'
 
@@ -23,9 +29,10 @@ export const enableMultiWorkspace = () => {
   try {
     const raw = window.localStorage.getItem(LOCAL_CONFIG_KEY)
     const config = raw ? JSON.parse(raw) : {}
-    if (config.multiTeamOverride !== undefined) return
+    if (config.multiTeamOverride === undefined) config.multiTeamOverride = true
+    if (config.multiTeamOverride !== true) return
 
-    config.multiTeamOverride = true
+    config.viewLayoutIsWorkspaceSwitcherVisible ??= true
     window.localStorage.setItem(LOCAL_CONFIG_KEY, JSON.stringify(config))
   } catch {
     // Never block Slack from booting over this; it just falls back to the
