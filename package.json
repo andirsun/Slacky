@@ -5,7 +5,7 @@
   "main": "dist/app/src/app.js",
   "scripts": {
     "start": "electron .",
-    "build": "swc src -d dist/app",
+    "build": "swc src -d dist/app --copy-files",
     "dev": "nodemon --watch src --ext ts --exec \"npm run build && npm run start\"",
     "pack": "npm run build && USE_SYSTEM_FPM=1 electron-builder",
     "publish": "USE_SYSTEM_FPM=1 electron-builder --publish always",

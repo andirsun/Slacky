@@ -1,82 +1,14 @@
-import {
-  BrowserWindow,
-  shell,
-  Session,
-  OnBeforeSendHeadersListenerDetails,
-  BeforeSendResponse,
-  ipcMain
-} from 'electron'
+import { BrowserWindow, ipcMain } from 'electron'
 import * as path from 'path'
+
 import { SlackyEvent } from './events'
-
-const defaultUserAgent =
-  'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36'
-
-const enhanceSession = (session: Session) => {
-  session.setUserAgent(defaultUserAgent)
-  session.webRequest.onBeforeSendHeaders(
-    (
-      details: OnBeforeSendHeadersListenerDetails,
-      callback: (beforeSendResponse: BeforeSendResponse) => void
-    ) => {
-      details.requestHeaders['User-Agent'] = defaultUserAgent
-      details.requestHeaders['Referer'] = details.referrer
-      callback({
-        cancel: false,
-        requestHeaders: details.requestHeaders
-      })
-    }
-  )
-}
-
-/**
- * A URL is "external" only when it is a real http(s) link that does not belong
- * to Slack or a supported authentication provider. Internal targets — most
- * importantly `about:blank`, which Slack uses when it pops a huddle out via
- * `window.open()` and then drives the returned window itself — must stay inside
- * Electron.
- */
-const isExternalUrl = (url: string): boolean => {
-  if (!/^https?:\/\//i.test(url)) return false
-
-  try {
-    const { hostname } = new URL(url)
-    const isSlack = hostname === 'slack.com' || hostname.endsWith('.slack.com')
-    const isGoogleAuth = hostname === 'accounts.google.com'
-    return !isSlack && !isGoogleAuth
-  } catch {
-    return true
-  }
-}
-
-/**
- * Route genuinely external links to the system browser while letting Slack's
- * own windows (slack.com pages and the `about:blank` huddle pop-out) open as
- * native Electron windows. Denying the pop-out used to make `window.open()`
- * return null, which Slack reported as "Unable to create window".
- */
-const applyExternalLinkPolicy = (contents: Electron.WebContents) => {
-  contents.setWindowOpenHandler(({ url }) => {
-    if (isExternalUrl(url)) {
-      shell.openExternal(url)
-      return { action: 'deny' } // Deny Electron from opening new windows directly
-    }
-    return { action: 'allow' }
-  })
-
-  // Intercept in-page navigation; keep external links in the OS browser.
-  contents.on('will-navigate', (event, url) => {
-    if (isExternalUrl(url)) {
-      event.preventDefault()
-      shell.openExternal(url)
-    }
-  })
-}
+import { registerScreenShareHandler } from './screen-share'
+import { defaultUserAgent, enhanceSession } from './session'
+import { applyExternalLinkPolicy } from './session/external-links'
 
 export default class Main {
   static mainWindow: Electron.BrowserWindow | null
   static application: Electron.App
-  static BrowserWindow
 
   private static onWindowAllClosed() {
     if (process.platform !== 'darwin') Main.application.quit()
@@ -120,6 +52,9 @@ export default class Main {
       applyExternalLinkPolicy(childWindow.webContents)
     })
 
+    // Covers the popped-out huddle too: it shares the main window's session.
+    registerScreenShareHandler(Main.mainWindow.webContents.session, () => Main.mainWindow)
+
     Main.mainWindow.loadURL(SLACK_APP_URL, {
       userAgent: defaultUserAgent
     })
@@ -146,8 +81,7 @@ export default class Main {
     win.flashFrame(true)
   }
 
-  static main(app: Electron.App, browserWindow: typeof BrowserWindow) {
-    Main.BrowserWindow = browserWindow
+  static main(app: Electron.App) {
     Main.application = app
     Main.application.on('window-all-closed', Main.onWindowAllClosed)
     Main.application.on('ready', Main.onReady)

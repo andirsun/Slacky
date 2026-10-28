@@ -1,0 +1,32 @@
+{
+  // Format with the project's own formatter. Zed otherwise falls back to its
+  // bundled Prettier, whose defaults (semicolons, double quotes, trailing
+  // commas) are the opposite of oxfmt.config.mts, so every save fought
+  // `npm run fmt`.
+  "languages": {
+    "TypeScript": {
+      "formatter": {
+        "external": {
+          "command": "./node_modules/.bin/oxfmt",
+          "arguments": ["--stdin-filepath", "{buffer_path}"]
+        }
+      }
+    },
+    "TSX": {
+      "formatter": {
+        "external": {
+          "command": "./node_modules/.bin/oxfmt",
+          "arguments": ["--stdin-filepath", "{buffer_path}"]
+        }
+      }
+    },
+    "JavaScript": {
+      "formatter": {
+        "external": {
+          "command": "./node_modules/.bin/oxfmt",
+          "arguments": ["--stdin-filepath", "{buffer_path}"]
+        }
+      }
+    }
+  }
+}
