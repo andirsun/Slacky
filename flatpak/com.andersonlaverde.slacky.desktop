@@ -1,0 +1,12 @@
+[Desktop Entry]
+Type=Application
+Name=Slacky
+GenericName=Slack Client
+Comment=Slack client for Linux arm64 systems
+Exec=slacky %U
+Icon=com.andersonlaverde.slacky
+Terminal=false
+Categories=Network;InstantMessaging;
+Keywords=slack;chat;messaging;huddle;workspace;
+StartupWMClass=Slacky
+MimeType=x-scheme-handler/slack;

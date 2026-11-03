@@ -1,3 +1,10 @@
 node_modules/
 dist/*
 .DS_Store
+
+# flatpak build artifacts
+flatpak/generated-sources.json
+flatpak-node/
+flatpak-node-generator.py
+.flatpak-builder/
+build-dir/
