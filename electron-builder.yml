@@ -10,6 +10,9 @@ files:
   - package.json
   - dist/app/**/*
   - node_modules
+  # Read at runtime for the tray and window icon. The desktop entry gets
+  # its own copy of build/icons, outside the asar.
+  - build/icons/icon.png
 protocols:
   - name: electron-deep-linking
     schemes:
